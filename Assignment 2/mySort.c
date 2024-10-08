@@ -1,35 +1,22 @@
-#include <stdio.h>
+// CODE: include necessary library(s)
+// you have to write all the functions and algorithms from scratch,
+// You will submit this file, mySort.c holds the actual implementation of sorting functions
 
 
-void bubbleSort(int arr[], int size) {
-
-    for (int i = 0; i < size - 1; i++) {
-        if(arr[i] < arr[i+1]) {
-            int swap = arr[i];
-            arr[i] = arr[i+1];
-            arr[i+1] = swap;
-        }
-    }
-    for (int i = 0; i < size -1; i++) {
-        if (arr[i] > arr[i+1]) {
-            bubbleSort(arr, size);
-        }
-    }
-
+void swap(int *x, int *y) {
+    int temp = *x;
+    *x = *y;
+    *y = temp;
 }
 
-
-int main(void) {
-
-    int arr[] = {64, -134, -5, 0, 25, 12, 22, 11, 90};
-    int n = sizeof(arr) / sizeof(arr[0]);
-
-
-    bubbleSort(arr, n);
-
-    for (int i = 0; i < n; i++) {
-        printf("Value: %d\n", arr[i]);
+// Bubble Sort
+void bubbleSort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1])
+                swap(&arr[j], &arr[j + 1]);
+        }
     }
-
-
 }
+
+// CODE: implement the algorithms for Insertion Sort, Merge Sort, Heap Sort, Counting Sort
