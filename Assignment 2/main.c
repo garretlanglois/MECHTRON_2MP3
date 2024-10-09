@@ -1,4 +1,7 @@
 // CODE: include necessary library(s)
+#include <strings.h>
+#include <stdio.h>
+#include "mySort.c"
 
 // Utility functions
 void printArray(int arr[], int n);
@@ -15,9 +18,11 @@ int main() {
     memcpy(testArr, arr, n * sizeof(int));
     printf("Original array: ");
     printArray(testArr, n);
-    bubbleSort(testArr, n);
+    //bubbleSort(testArr, n);
+    insertionSort(testArr, n);
     printf("Bubble sorted array: ");
     printArray(testArr, n);
+    
 
     // CODE: do the same test cases for Insertion Sort, Merge Sort, Heap Sort, Counting Sort
     // You will submit main.c, and your project will be marked based on main.c as well
