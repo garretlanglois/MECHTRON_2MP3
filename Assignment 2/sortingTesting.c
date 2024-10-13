@@ -146,7 +146,7 @@ void heapify(int arr[], int index, int n) {
 
     //The first condition could have been an if conditional statement surrounding
     //both but I found that that looked messy, so I used &&
-    if((leftIndex <= n) && (arr[leftIndex] > arr[index])) {
+    if((leftIndex < n) && (arr[leftIndex] > arr[index])) {
         maxIndex = leftIndex;
     }
     else {
@@ -155,7 +155,7 @@ void heapify(int arr[], int index, int n) {
 
     //Same this as before but now with the right index
     //We are fine to use maxIndex here because it will have always been defined at this point in the code
-    if((rightIndex <= n) && (arr[rightIndex] > arr[maxIndex])) {
+    if((rightIndex < n) && (arr[rightIndex] > arr[maxIndex])) {
         maxIndex = rightIndex;
     }
 
@@ -168,7 +168,7 @@ void heapify(int arr[], int index, int n) {
 
 //Define the function for building the maximum heap, this only ever is called once for any given array
 void buildMaxHeap(int arr[], int n) {
-    for (int i = n/2; i > 0; i--) {
+    for (int i = n/2 - 1; i >= 0; i--) {
         heapify(arr, i, n);
     }
 }
@@ -179,9 +179,8 @@ void heapSort(int arr[], int n) {
 
     buildMaxHeap(arr, n);
 
-    for (int i = n; i > 0; i--) {
+    for (int i = n - 1; i > 0; i--) {
         swap(&arr[0], &arr[i]);
-        n = n - 1;   
         heapify(arr, 0, i);    
     }
 
