@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+//Need to take into account STACK OVERFLOW for large range in python file
+
+//These are the functions for doing tasks
 void swap(int *x, int *y) {
     int temp = *x;
     *x = *y;
@@ -14,49 +17,6 @@ void printArray(int arr[], int n) {
     }
     printf("\n");
 }
-
-//Need to take into account STACK OVERFLOW for large range in python file
-
-/* First mergeSort attempt
-void mergeSort(int arr[], int n) {
-
-    if (n == 1) {
-        
-    }
-    if (n == 2) {
-        if (arr[1] < arr[0]) {
-            swap(&arr[1], &arr[0]);
-        }
-    }
-
-    else {
-        int leftSize = n/2;
-
-        int rightSize = n - leftSize;
-
-        int *leftArr = (int*)malloc(leftSize*sizeof(int));
-        int *rightArr = (int*)malloc(rightSize*sizeof(int));
-
-        if (leftArr == NULL || rightArr == NULL) {
-            printf("ERROR \n");
-            exit(1);
-        }
-
-        memcpy(leftArr, arr, leftSize * sizeof(int));             // Copy left half
-        memcpy(rightArr, &arr[leftSize], rightSize * sizeof(int));
-
-        mergeSort(leftArr, leftSize);
-        mergeSort(rightArr, rightSize);
-
-        memcpy(arr, leftArr, leftSize*sizeof(int));
-        memcpy(&arr[leftSize], rightArr, rightSize*sizeof(int));
-
-        free(leftArr);
-        free(rightArr);
-    }
-
-}
-*/
 
 void mergeElements(int arr[], int leftPosition, int rightPosition) {
 
@@ -124,6 +84,7 @@ void mergeElements(int arr[], int leftPosition, int rightPosition) {
 
 }
 
+//These are the sorting algorithms
 void mergeSort(int arr[], int l, int r) {
     if (l < r) {
         int m = l + (r-l)/2;
@@ -136,7 +97,6 @@ void mergeSort(int arr[], int l, int r) {
 
     }
 }
-
 
 void insertionSort(int arr[], int n) {
 
@@ -166,6 +126,10 @@ void insertionSort(int arr[], int n) {
     }
 }
 
+void heapSort(int arr[], int n) {
+    
+}
+//This is the main function for running the code with a test array
 int main() {
     int arr[] = {64, -134, -5, 0, 25, 12, 22, 11, 90};
     int n = sizeof(arr) / sizeof(arr[0]);
