@@ -194,6 +194,73 @@ void bubbleSort(int arr[], int n) {
         }
     }
 }
+
+void countingSort(int arr[], int n) {
+
+    //Start by constructing a new array of variable length that will keep track of all the occurences of numbers that we see
+    //So that we dont run into stack issues we can dynamically resize the array that holds the occurences based on the amount of number we see
+
+    //Originally my implementation did not account for negative numbers so this for loops fixs that by determining the 
+    //maximum and minimum values in the array and creating a range
+
+    //Create some original values so that the min and max aren't unassigned cause that would not be good :)
+    int min = arr[0];
+    int max = arr[0];
+
+    for (int i = 1; i < n; i++) {
+        if (arr[i] < min) {
+            min = arr[i];
+        }
+        else if (arr[i] > max) {
+            max = arr[i];
+        }
+    }
+
+    //Now we are going to define a variable which represents the range of the array (difference between the lowest and highest number)
+
+    int range = max - min + 1; //+1 for 0
+
+    //This is another change I made from previous iterations of this code and prevents having to dynamically
+    //resize the array occurences, even if it does take another for loop. (We had to make the for loop anyway)
+    
+    int *occurences = (int *)malloc(range * sizeof(int));
+
+    //Here is the annoying part where we have to initialize the array with all zeroes because C doesn't default to doing that
+    for (int i = 0; i < range; i++) {
+        occurences[i] = 0;
+    }
+
+    //Now we count the total occurences of each number we see using a loop, account for negative numbers using our new range we defined
+    for (int i = 0; i  < n; i++) {
+        occurences[arr[i] - min]++; //Now we incremement the occurences array at our desired position by one!
+    }
+
+    //Now we need to fill the original array based on our occurences array
+    //We need to remember to account for the min value that we created earlier
+    
+    //Using knowledge gained from the merge sort code I remembered that I can place an index outside the loop
+    //Here I called it index to make it a little clearer
+    int index = 0;
+
+    //Loop through every value in the code
+    for (int i = 0; i < range; i++) {
+
+        //We get the "number of each number" using our little occurences array
+        int numberOfValues = occurences[i];
+
+        //We now add that many numbers back to our original array! (making sure to account for the minimum value of course...)
+        for (int j = 0; j < numberOfValues; j++) {
+            arr[index] = i + min;
+
+            //Now we see why we needed this index value because it needs to be independent of both loops.
+            //The first loop goes through all the values we need to add and the second one adds that value the correct number of times
+            //The index keeps track of where we are in the original list.
+            index++;
+        }
+    }
+
+}
+
 //This is the main function for running the code with a test array
 int main() {
     int arr[] = {64, -134, -5, 0, 25, 12, 22, 11, 90};
@@ -206,7 +273,7 @@ int main() {
     printf("Original array: ");
     printArray(testArr, n);
     //bubbleSort(testArr, n);
-    heapSort(testArr, n);
+    countingSort(testArr, n);
     printf("Bubble sorted array: ");
     printArray(testArr, n);
     
