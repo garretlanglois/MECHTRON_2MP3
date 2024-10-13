@@ -126,8 +126,74 @@ void insertionSort(int arr[], int n) {
     }
 }
 
+//Define the function for building all subsequent heaps after the initial maximum heap
+//In this array index is the index in the array of the parent node that we want to heapify
+//I find it helpful to visualize it as a bunch of little lists that we reverse sort and then append
+//one by one
+
+//When we recursively heapify we follow the value along until it is at the bottom of its respective branch
+//of the heap
+void heapify(int arr[], int index, int n) {
+
+    //Because each branch of the tree grows at 2^n where n is the depth we just need two elements for every layer
+    int leftIndex = 2*index + 1;
+    int rightIndex = 2*index + 2;
+
+    int maxIndex = 0;
+
+    //The first condition ensures the the index is within the bounds
+    //The second checks to see if the value is in the wrong place
+
+    //The first condition could have been an if conditional statement surrounding
+    //both but I found that that looked messy, so I used &&
+    if((leftIndex <= n) && (arr[leftIndex] > arr[index])) {
+        maxIndex = leftIndex;
+    }
+    else {
+        maxIndex = index;
+    }
+
+    //Same this as before but now with the right index
+    //We are fine to use maxIndex here because it will have always been defined at this point in the code
+    if((rightIndex <= n) && (arr[rightIndex] > arr[maxIndex])) {
+        maxIndex = rightIndex;
+    }
+
+    if (maxIndex != index) {
+        swap(&arr[index], &arr[maxIndex]);
+        heapify(arr, maxIndex, n);
+    }
+
+} 
+
+//Define the function for building the maximum heap, this only ever is called once for any given array
+void buildMaxHeap(int arr[], int n) {
+    for (int i = n/2; i > 0; i--) {
+        heapify(arr, i, n);
+    }
+}
+
 void heapSort(int arr[], int n) {
-    
+    //Doing heap sort requires three different functions
+    //The heapify function, the build maximum heap function, and the sorting function itself
+
+    buildMaxHeap(arr, n);
+
+    for (int i = n; i > 0; i--) {
+        swap(&arr[0], &arr[i]);
+        n = n - 1;   
+        heapify(arr, 0, i);    
+    }
+
+}
+
+void bubbleSort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1])
+                swap(&arr[j], &arr[j + 1]);
+        }
+    }
 }
 //This is the main function for running the code with a test array
 int main() {
@@ -141,7 +207,7 @@ int main() {
     printf("Original array: ");
     printArray(testArr, n);
     //bubbleSort(testArr, n);
-    mergeSort(testArr, 0, n-1);
+    heapSort(testArr, n);
     printf("Bubble sorted array: ");
     printArray(testArr, n);
     
