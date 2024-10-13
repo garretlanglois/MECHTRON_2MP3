@@ -22,21 +22,29 @@ void bubbleSort(int arr[], int n) {
 // CODE: implement the algorithms for Insertion Sort, Merge Sort, Heap Sort, Counting Sort
 
 void insertionSort(int arr[], int n) {
-    for (int i = 1; i < n - 1; i++) {
-        if(arr[i] < arr[i-1]) {
-            for (int j = 0; j < n - i; j ++) {
 
-                //Create two new arrays that will store the data of the array up to the position we are splicing
-                //And an array that contains everything after the splice that we are making
-                int firstSplice[i];
-                int secondSplice[n - i];
+     //Assume the elements in the array prior to the current element are already sorted
+     //Start at the first element of the array and loop through all of the elements after that
+    for (int i = 1; i < n; i++) {
+    
+        int shiftValue = arr[i];
 
-                memcpy(firstSplice, arr, 3 * sizeof(int)); 
-                
-                memcpy(secondSplice, &arr[3], 3 * sizeof(int)); 
+        int j;
 
+        for (j = i - 1; j >= 0; j--) {
+
+            if(arr[j] > shiftValue) {
+                arr[j+1] = arr[j];
+            }  
+            else {
+                break;
             }
+
         }
+
+        //Ran into a segmentation here many times because I tried arr[j] instead of arr[j+1] which would result in the indexing
+        //at a negative element
+        arr[j + 1] = shiftValue;
 
     }
 }
