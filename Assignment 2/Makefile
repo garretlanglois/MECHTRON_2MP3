@@ -10,7 +10,7 @@ SRCS = mySort.c
 
 #build the shared library
 all:
-	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS)
+    $(CC) $(CFLAGS) -o $(TARGET) $(SRCS)
 
 #include a clean if they want to remove the shared library
 clean:
