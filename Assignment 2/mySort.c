@@ -1,4 +1,9 @@
 // CODE: include necessary library(s)
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <strings.h>
+
 // you have to write all the functions and algorithms from scratch,
 // You will submit this file, mySort.c holds the actual implementation of sorting functions
 
