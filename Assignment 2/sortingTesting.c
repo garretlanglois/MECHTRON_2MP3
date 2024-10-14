@@ -29,8 +29,8 @@ void mergeElements(int arr[], int leftPosition, int rightPosition) {
 
     //Now we need two different arrays which we will use to temporarly store the data
 
-    int leftArray[leftSize];
-    int rightArray[rightSize];
+    int *leftArray = (int *)malloc(leftSize * sizeof(int));
+    int *rightArray = (int *)malloc(rightSize * sizeof(int));
 
 
     //Append the values of the array from the left side to the temporary array
@@ -82,17 +82,29 @@ void mergeElements(int arr[], int leftPosition, int rightPosition) {
         k++;
     }
 
+    //Free the allocated memory for the left array and right array
+    free(leftArray);
+    free(rightArray);
+
 }
 
 //These are the sorting algorithms
 void mergeSort(int arr[], int l, int r) {
+
+    //This ensures that the size of the elements that are being merged are greater than 0
     if (l < r) {
+
+        //This defines the middle value for the array
+        //The reason that single letter variable names are being used is because that is what is used in the header for this function
         int m = l + (r-l)/2;
 
+        //We run the mergeSort recursively for the two different arrays, the left one and the right one
+        //Remember they will not run if the dimenions that it is expecting is less than one
         mergeSort(arr, l, m);
 
         mergeSort(arr, m+1,r);
 
+        //This function contains the main logic for the algorithm, it swaps the elements in the array depending on what order they are in
         mergeElements(arr, l , r);
 
     }
@@ -104,15 +116,21 @@ void insertionSort(int arr[], int n) {
      //Start at the first element of the array and loop through all of the elements after that
     for (int i = 1; i < n; i++) {
     
+        //This will grab the value of the element we want to place in the correct position
         int shiftValue = arr[i];
 
+        //We want to use j later so we define it outside of the loop
         int j;
 
+        //We loop through all of the elements in the list
         for (j = i - 1; j >= 0; j--) {
 
+            //If the current element is greater than the value we are looking at we shift the values that are
+            //greater than it in the array one to the right
             if(arr[j] > shiftValue) {
                 arr[j+1] = arr[j];
             }  
+            //Once we have found a place where the value is not greater than it the correct location is found
             else {
                 break;
             }
@@ -121,6 +139,7 @@ void insertionSort(int arr[], int n) {
 
         //Ran into a segmentation here many times because I tried arr[j] instead of arr[j+1] which would result in the indexing
         //at a negative element
+        //This places the shiftValue at the correct position, one position ahead of the last position we checked.
         arr[j + 1] = shiftValue;
 
     }
