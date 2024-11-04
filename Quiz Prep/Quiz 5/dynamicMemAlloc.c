@@ -36,7 +36,7 @@ int main(void) {
 
     int ***raggedThree = malloc(layers*sizeof(int**));
 
-    if (raggedArray == NULL) {
+    if (raggedThree == NULL) {
         printf("MEMORY ALLOCATION FAILURE");
     }
 
