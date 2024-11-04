@@ -36,6 +36,10 @@ int main(void) {
 
     int ***raggedThree = malloc(layers*sizeof(int**));
 
+    if (raggedArray == NULL) {
+        printf("MEMORY ALLOCATION FAILURE");
+    }
+
     for (int i = 0; i < layers; i++) {
         raggedThree[i] = malloc(rows_per_layer[i]*sizeof(int*));
         for (int j = 0; j < rows_per_layer[i]; j ++) {
