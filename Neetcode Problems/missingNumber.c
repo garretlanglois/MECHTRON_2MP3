@@ -18,5 +18,6 @@ int main() {
     int result = missingNumber(nums, 9);
 
     printf("The result is %d", result);
+    printf("hello");
 
 }
