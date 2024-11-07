@@ -14,6 +14,9 @@ int hashFunction(int key) {
 
 void insert(int key, int value, HashEntry **hashTable) {
     int index = hashFunction(key);
+    if(hashTable[index] != NULL) {
+        free(hashTable[index]);
+    }
     HashEntry *entry = (HashEntry *)malloc(sizeof(HashEntry));
     entry -> key = key;
     entry -> value = value;
