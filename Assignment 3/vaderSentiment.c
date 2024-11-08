@@ -6,9 +6,11 @@ void printTokenList(char** list, int tokenCount) {
 
     printf("[");
 
-    for (int i = 0; i < tokenCount; i++) {
+    for (int i = 0; i < tokenCount-1; i++) {
         printf("%s, ",list[i]);
     }
+
+    printf("%s", list[tokenCount-1]);
     printf("]");
 }
 
