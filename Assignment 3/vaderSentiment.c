@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define ARRAY_SIZE 10
-#define MAX_STRING_LENGTH 5
+#define MAX_STRING_LENGTH 17
 #define LEXICON_SIZE 7520
 
 typedef struct {
@@ -29,16 +30,55 @@ void parseLexicon() {
             exit(1);
         }
 
-        if (fscanf(file, "%s %f %f [%d %d %d %d %d %d %d %d %d %d]", lexicon[i]->word, &lexicon[i]->meanSentiment, &lexicon[i]->standardDeviation, 
+        //To save memory we can dynamically change the size of the word in the struct: 
+
+        char buffer[20];
+
+        //This is the original way I had the code made, but when analyzing memory usage it was less efficient, I don't know why
+        /*
+        if (fscanf(file, "%s %f %f [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]", buffer, &lexicon[i]->meanSentiment, &lexicon[i]->standardDeviation, 
         &lexicon[i]->intArray[0], &lexicon[i]->intArray[1], &lexicon[i]->intArray[2], &lexicon[i]->intArray[3], &lexicon[i]->intArray[4],
         &lexicon[i]->intArray[5], &lexicon[i]->intArray[6], &lexicon[i]->intArray[7],&lexicon[i]->intArray[8], &lexicon[i]->intArray[9])) {
 
-            printf("%s\n", lexicon[i]->word);
+            int size = strlen(buffer)+1;//For the /0 thing
+
+            lexicon[i]->word = malloc(size*sizeof(char));
+            if (lexicon[i]->word == NULL) {
+                printf("Memory allocation failed");
+                exit(1);
+            }
+
+            strcpy(lexicon[i]->word, buffer);
+
+            //printf("%s\n", lexicon[i]->word);
+
 
         }
+        */
+
+        //This method uses the fixed size for the word.+
+        if (fscanf(file, "%s %f %f [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]", lexicon[i]->word, &lexicon[i]->meanSentiment, &lexicon[i]->standardDeviation, 
+        &lexicon[i]->intArray[0], &lexicon[i]->intArray[1], &lexicon[i]->intArray[2], &lexicon[i]->intArray[3], &lexicon[i]->intArray[4],
+        &lexicon[i]->intArray[5], &lexicon[i]->intArray[6], &lexicon[i]->intArray[7],&lexicon[i]->intArray[8], &lexicon[i]->intArray[9])) {
+
+            printf("lexicon[%d] = %s\n", i, lexicon[i]->word);
+
+        }
+        else {
+            printf("Parsing failure, exiting program...");
+            exit(1);
+        }
+
     }
 
     fclose(file);
+}
+
+void freeTokens(char** tokens, int tokenCount) {
+    for (int i = 0; i < tokenCount; i++) {
+        free(tokens[i]); 
+    }
+    free(tokens);
 }
 
 void printTokenList(char** list, int tokenCount) {
@@ -54,10 +94,9 @@ void printTokenList(char** list, int tokenCount) {
 }
 
 //Custom tokenization function that will require reallocation of memory
-char** tokenization(char * sentence, int size) {
+char** tokenization(char * sentence, int size, int* tokenCount) {
 
     int tokenSize = 10;
-    int tokenCount = 0;
 
     int totalTokenLengthCount = 0;
 
@@ -85,6 +124,7 @@ char** tokenization(char * sentence, int size) {
 
             if (token == NULL) {
                 printf("Memory allocation error when creating individual tokens...");
+                freeTokens(tokens, *tokenCount);
                 exit(1);
             }
 
@@ -97,19 +137,20 @@ char** tokenization(char * sentence, int size) {
 
             //We need to reallocate the tokens array if we run into a size error:
 
-            if (tokenCount == tokenSize) {
+            if (*tokenCount == tokenSize) {
                 tokenSize *= 2;
                 tokens = (char **)realloc(tokens, tokenSize * sizeof(char*));
                 if (tokens == NULL) {
                     printf("Error in reallocating token array memory");
+                    freeTokens(tokens, *tokenCount);
                     exit(1);
                 }
             }
 
-            tokens[tokenCount] = token;
+            tokens[*tokenCount] = token;
             tokenLength = 0; 
 
-            tokenCount++;
+            (*tokenCount)++;
         }
         else {
             tokenLength++;
@@ -123,30 +164,56 @@ char** tokenization(char * sentence, int size) {
     //Grab the last token if the last character is not our delimeter
     if (totalTokenLengthCount < size - 1) {
 
-        char* token = (char *)malloc((tokenLength+1-3)*sizeof(char));
+        char* token = (char *)malloc((tokenLength+1)*sizeof(char));
+        if (token == NULL) {
+            printf("Memory allocation error when creating the last token...");
+            freeTokens(tokens, *tokenCount);
+            exit(1);
+        }
 
-        strncpy(token, &sentence[index-tokenLength], tokenLength-3);
+        strncpy(token, &sentence[index-tokenLength], tokenLength);
 
-        tokens[tokenCount] = token;
+        tokens[*tokenCount] = token;
 
-        tokenCount++;
+        (*tokenCount)++;
 
     }
 
-    printTokenList(tokens, tokenCount);
+    printTokenList(tokens, *tokenCount);
 
     return tokens;
 
 }
 
-int main(void) {
-    
-    char sentence[18] = {"This is a sentence"};
+int sentimentCalculation(char* word) {
 
-    tokenization(sentence, 18);
+    int i = 0;
+
+    while (lexicon[i] != word && i < LEXICON_SIZE) {
+
+        
+
+    }
+
+}
+
+int main(void) {
+
 
     parseLexicon();
 
-    printf("%s", lexicon[0]->word);
+    int tokenCount = 0;
+    
+    char sentence[] = {"This is a sentence"};
+
+    char** tokens = tokenization(sentence, 18, &tokenCount);
+
+    int lexiconSize = sizeof(lexicon)/sizeof(WordData *);
+
+    printf("\n\nThe value is %s\n", lexicon[7519]->word);
+
+    printf("\nThe lexicon size is: %d", lexiconSize);
+
+    freeTokens(tokens, tokenCount);
 
 }
