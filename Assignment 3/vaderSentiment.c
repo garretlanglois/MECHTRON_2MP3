@@ -2,6 +2,45 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define ARRAY_SIZE 10
+#define MAX_STRING_LENGTH 5
+#define LEXICON_SIZE 7520
+
+typedef struct {
+    char word[MAX_STRING_LENGTH];
+    float meanSentiment; //Mean sentiment value
+    float standardDeviation; //Standard deviation
+    int intArray[ARRAY_SIZE]; //Array of sentiment ratings
+} WordData;
+
+WordData* lexicon[LEXICON_SIZE];
+
+void parseLexicon() {
+    FILE *file = fopen("vader_lexicon.txt", "r");
+    if (file == NULL) {
+        printf("Error opening file\n");
+        exit(1);
+    }
+
+    for (int i = 0; i < LEXICON_SIZE; i++) {
+        lexicon[i] = malloc(sizeof(WordData));  // Allocate memory for each WordData entry
+        if (lexicon[i] == NULL) {
+            printf("Memory allocation failed\n");
+            exit(1);
+        }
+
+        if (fscanf(file, "%s %f %f [%d %d %d %d %d %d %d %d %d %d]", lexicon[i]->word, &lexicon[i]->meanSentiment, &lexicon[i]->standardDeviation, 
+        &lexicon[i]->intArray[0], &lexicon[i]->intArray[1], &lexicon[i]->intArray[2], &lexicon[i]->intArray[3], &lexicon[i]->intArray[4],
+        &lexicon[i]->intArray[5], &lexicon[i]->intArray[6], &lexicon[i]->intArray[7],&lexicon[i]->intArray[8], &lexicon[i]->intArray[9])) {
+
+            printf("%s\n", lexicon[i]->word);
+
+        }
+    }
+
+    fclose(file);
+}
+
 void printTokenList(char** list, int tokenCount) {
 
     printf("[");
@@ -105,5 +144,9 @@ int main(void) {
     char sentence[18] = {"This is a sentence"};
 
     tokenization(sentence, 18);
+
+    parseLexicon();
+
+    printf("%s", lexicon[0]->word);
 
 }
