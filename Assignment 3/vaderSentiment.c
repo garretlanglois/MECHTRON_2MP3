@@ -8,6 +8,7 @@
 #define MAX_STRING_LENGTH 17
 #define LEXICON_SIZE 7525
 #define boostFactor 0.293
+#define negationConstant -0.5
 
 #define positiveCount 11
 #define negativeCount 9
