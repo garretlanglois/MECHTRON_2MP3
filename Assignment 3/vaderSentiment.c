@@ -49,8 +49,6 @@ void parseLexicon() {
 
         //To save memory we can dynamically change the size of the word in the struct: 
 
-        char buffer[20];
-
         //This is the original way I had the code made, but when analyzing memory usage it was less efficient, I don't know why
         /*
         if (fscanf(file, "%s %f %f [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]", buffer, &lexicon[i]->meanSentiment, &lexicon[i]->standardDeviation, 
