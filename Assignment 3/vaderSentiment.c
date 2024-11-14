@@ -158,7 +158,7 @@ char** tokenization(char * sentence, int size, int* tokenCount) {
         printf("%c\n",sentence[index]);
         
         //Just in case there is a space first && > 0
-        if(sentence[index] == delimeter && tokenLength > 0) {
+        if((sentence[index] == delimeter || sentence[index] == ',') && tokenLength > 0) {
 
             totalTokenLengthCount += tokenLength;
 
@@ -194,7 +194,7 @@ char** tokenization(char * sentence, int size, int* tokenCount) {
 
             (*tokenCount)++;
         }
-        else {
+        else if (sentence[index] != ',') {
             tokenLength++;
         }
         index++;
@@ -319,7 +319,7 @@ WordData* findWord(char* word) {
 int main(void) {
 
     //This can be set to true to show how the code works
-    bool excessPrinting = true;
+    bool excessPrinting = false;
 
     parseLexicon(excessPrinting);
 
@@ -329,12 +329,8 @@ int main(void) {
 
     char** tokens = tokenization(sentence, 18, &tokenCount);
 
-    int lexiconSize = sizeof(lexicon)/sizeof(WordData *);
 
-    printf("\n\nThe value is %s\n", lexicon[7524]->word);
-
-    printf("\nThe hashtable size is: %d", lexiconSize);
-
+    //Example of how to use the findWord function
     WordData* foundWord = findWord("wise");
 
     if (foundWord != NULL) {
