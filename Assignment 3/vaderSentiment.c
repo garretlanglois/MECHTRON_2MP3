@@ -2,11 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdbool.h>
 
 //Values that can be adjusted
 #define ARRAY_SIZE 10
 #define MAX_STRING_LENGTH 17
-#define LEXICON_SIZE 7525
+#define LEXICON_SIZE 7521
+
+//There is a trade off here, the larger we make the table the less linear probing we will have to do, but the more memory we will use
+//I chose to minimize the memory usage by only having 15000 elements in the table
+#define TABLE_SIZE 15000
+
 #define boostFactor 0.293
 #define negationConstant -0.5
 
@@ -30,10 +36,18 @@ typedef struct {
     int intArray[ARRAY_SIZE]; //Array of sentiment ratings
 } WordData;
 
-WordData* lexicon[LEXICON_SIZE];
+WordData* lexicon[TABLE_SIZE];
 
+unsigned long hash(char *str) {
+    unsigned long hash = 5381;
+    int c;
+    while ((c = *str++)) {
+        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+    }
+    return hash;
+}
 
-void parseLexicon() {
+void parseLexicon(bool verbose) {
     FILE *file = fopen("vader_lexicon.txt", "r");
     if (file == NULL) {
         printf("Error opening file\n");
@@ -41,51 +55,64 @@ void parseLexicon() {
     }
 
     for (int i = 0; i < LEXICON_SIZE; i++) {
-        lexicon[i] = malloc(sizeof(WordData));  // Allocate memory for each WordData entry
-        if (lexicon[i] == NULL) {
-            printf("Memory allocation failed\n");
-            exit(1);
-        }
 
-        //To save memory we can dynamically change the size of the word in the struct: 
+        char wordToHash[17];
 
-        //This is the original way I had the code made, but when analyzing memory usage it was less efficient, I don't know why
-        /*
-        if (fscanf(file, "%s %f %f [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]", buffer, &lexicon[i]->meanSentiment, &lexicon[i]->standardDeviation, 
-        &lexicon[i]->intArray[0], &lexicon[i]->intArray[1], &lexicon[i]->intArray[2], &lexicon[i]->intArray[3], &lexicon[i]->intArray[4],
-        &lexicon[i]->intArray[5], &lexicon[i]->intArray[6], &lexicon[i]->intArray[7],&lexicon[i]->intArray[8], &lexicon[i]->intArray[9])) {
+        float meanSentiment;
+        float standardDeviation;
 
-            int size = strlen(buffer)+1;//For the /0 thing
+        int intArray[10];
 
-            lexicon[i]->word = malloc(size*sizeof(char));
-            if (lexicon[i]->word == NULL) {
-                printf("Memory allocation failed");
+        if (fscanf(file, "%16s %f %f [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]", wordToHash, &meanSentiment, &standardDeviation, 
+        &intArray[0], &intArray[1], &intArray[2], &intArray[3], &intArray[4], &intArray[5], &intArray[6], &intArray[7], &intArray[8], &intArray[9])) {
+
+            unsigned long hashed_location = hash(wordToHash) % TABLE_SIZE;
+
+            //This fixes collisions, worst case scenario is O(n) where n is the number of elements in the table 
+            if (lexicon[hashed_location] != NULL) {
+
+                if (verbose) {
+                    printf("Collision detected at index %lu \n", hashed_location);
+                    printf("\n Performing linear probing...\n");
+                }
+
+                while (lexicon[hashed_location] != NULL) {
+                    hashed_location++;
+                    hashed_location = hashed_location % TABLE_SIZE;
+                }
+
+                if (verbose) {
+                    printf("New hashed location: %lu\n", hashed_location);
+                }
+            }
+
+            lexicon[hashed_location] = malloc(sizeof(WordData));  // Allocate memory for each WordData entry
+            if (lexicon[hashed_location] == NULL) {
+                printf("Memory allocation failed\n");
                 exit(1);
             }
 
-            strcpy(lexicon[i]->word, buffer);
+            strcpy(lexicon[hashed_location]->word, wordToHash);
+            lexicon[hashed_location]->meanSentiment = meanSentiment;
+            lexicon[hashed_location]->standardDeviation = standardDeviation;
 
-            //printf("%s\n", lexicon[i]->word);
+            //This is not O(n)
+            for (int j = 0; j < 10; j++) {
+                lexicon[hashed_location]->intArray[j] = intArray[j];
+            }
 
-
-        }
-        */
-
-        //This method uses the fixed size for the word.+
-        if (fscanf(file, "%s %f %f [%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]", lexicon[i]->word, &lexicon[i]->meanSentiment, &lexicon[i]->standardDeviation, 
-        &lexicon[i]->intArray[0], &lexicon[i]->intArray[1], &lexicon[i]->intArray[2], &lexicon[i]->intArray[3], &lexicon[i]->intArray[4],
-        &lexicon[i]->intArray[5], &lexicon[i]->intArray[6], &lexicon[i]->intArray[7],&lexicon[i]->intArray[8], &lexicon[i]->intArray[9])) {
-
-            printf("lexicon[%d] = %s\n", i, lexicon[i]->word);
+            if (verbose) {
+                printf("lexicon[%lu] = %s\n", hashed_location, lexicon[hashed_location]->word);
+            }  
 
         }
+
         else {
             printf("Parsing failure, exiting program...");
             exit(1);
+
         }
-
     }
-
     fclose(file);
 }
 
@@ -255,10 +282,46 @@ double compoundSentimentScoreCalculation(char** tokens, int sentenceLength) {
 
 }
 
+WordData* findWord(char* word) {
+
+    unsigned long tempWordPosition = hash(word) % TABLE_SIZE;
+
+    if (lexicon[tempWordPosition] != NULL && strcmp(lexicon[tempWordPosition]->word, word) == 0) {
+        return lexicon[tempWordPosition];
+    }
+    else {
+
+        int index = 0;
+
+        char* tempWord = lexicon[tempWordPosition]->word;
+
+        while (lexicon[tempWordPosition] != NULL && strcmp(tempWord, word) != 0) {
+            tempWordPosition++;
+
+            //So that it rolls over if its out of bounds
+            tempWordPosition = tempWordPosition % TABLE_SIZE;
+            if (lexicon[tempWordPosition] != NULL && strcmp(lexicon[tempWordPosition]->word, word) == 0) {
+                return lexicon[tempWordPosition];
+            }
+            else {
+                index++;
+                if (index > TABLE_SIZE) {
+                    break;
+                }
+            }
+            
+        }
+    }
+
+    return lexicon[tempWordPosition];
+}
+
 int main(void) {
 
+    //This can be set to true to show how the code works
+    bool excessPrinting = true;
 
-    parseLexicon();
+    parseLexicon(excessPrinting);
 
     int tokenCount = 0;
     
@@ -270,7 +333,15 @@ int main(void) {
 
     printf("\n\nThe value is %s\n", lexicon[7524]->word);
 
-    printf("\nThe lexicon size is: %d", lexiconSize);
+    printf("\nThe hashtable size is: %d", lexiconSize);
+
+    WordData* foundWord = findWord("wise");
+
+    if (foundWord != NULL) {
+        printf("\n\nThe word is %s\n", foundWord->word);
+    } else {
+        printf("\n\nWord not found\n");
+    }
 
     freeTokens(tokens, tokenCount);
 
