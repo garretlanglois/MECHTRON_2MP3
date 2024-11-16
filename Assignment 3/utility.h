@@ -35,6 +35,6 @@ void freeTokens(char** tokens, int tokenCount);
 void printTokenList(char** list, int tokenCount);
 char** tokenization(char* sentence, int size, int* tokenCount);
 WordData* findWord(char* word);
-double sentimentCalculation(char* testWord, double *intensifierScore);
+double sentimentCalculation(char* testWord, double *intensifierScore, double *negationScore);
 double compoundSentimentScoreCalculation(char** tokens, int sentenceLength);
 unsigned long hash(char* str);

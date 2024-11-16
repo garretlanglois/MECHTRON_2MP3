@@ -1,20 +1,23 @@
+# Makefile for VADER Sentiment Analysis Assignment
+
+# Compiler
 CC = gcc
 
-CFLAGS = -Wall -Wextra -std=c11 -lm -fsanitize=address
+# Compiler Flags
+CFLAGS = -O3 -Wall
 
-TARGET = vaderSentiment
+# Target executable name
+TARGET = vader_sentiment
 
+# Source files
 SRCS = main.c vaderSentiment.c
 
-OBJS = $(SRCS:.c=.o)
-
+# Build the executable
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-	$(CC) $(OBJS) -o $(TARGET) $(CFLAGS)
+$(TARGET): $(SRCS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(SRCS)
 
-%.o: %.c
-	$(CC) -c $< -o $@ $(CFLAGS)
-
+# Clean up build files
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(TARGET)

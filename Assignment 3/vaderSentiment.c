@@ -49,8 +49,21 @@ void parseLexicon(bool verbose) {
         exit(1);
     }
 
+    //We can programatically determine the size of the lexicon by reading the number of lines in it
+    int lexiconSize = 0;
+    while (!feof(file)) {
+        char ch = fgetc(file);
+        if (ch == '\n') {
+            lexiconSize++;
+        }
+    }
+
+    rewind(file);
+
+    printf("Lexicon size: %d\n", lexiconSize);
+
     //Iterate through the file and parse the data
-    for (int i = 0; i < LEXICON_SIZE; i++) {
+    for (int i = 0; i < lexiconSize; i++) {
 
         //We will start by reading the data and saving the values in the line to temporary values which are defined below
         //Then the word will be hashed to determine the index locaiton in the hash table and it will be saved as a WordData struct
@@ -249,7 +262,7 @@ char** tokenization(char * sentence, int size, int* tokenCount) {
     }
 
     //Print and return the tokens
-    printTokenList(tokens, *tokenCount);
+    //printTokenList(tokens, *tokenCount);
     return tokens;
 }
 
@@ -300,12 +313,14 @@ WordData* findWord(char* word) {
 }
 
 //This function calculates the sentiment of the word
-double sentimentCalculation(char* testWord, double *intensifierScore ) {
+double sentimentCalculation(char* testWord, double *intensifierScore, double *negationScore) {
 
 
     //Create a dummy word to store the original word, this way when it is lowercased we still have an OG copy to check all caps against
     char dummyWord[100];
     strcpy(dummyWord, testWord);
+
+    //printf("%f\n", *negationScore);
 
     //Variable to store the score of the word
     double wordScore = 0;
@@ -337,24 +352,8 @@ double sentimentCalculation(char* testWord, double *intensifierScore ) {
         double sentimentValue = wordData->meanSentiment;
 
         //Add the sentiment value to the word score, inclusive of any previous intensifiers
-        wordScore += *intensifierScore*sentimentValue + sentimentValue;
-
-        //Check if the word is negated
-        int isNegated = 0;
-        for (int l = 0; l < negationCount; l++) {
-            if (strcmp(wordData->word, negations[l]) == 0) {
-                isNegated = 1;
-                break;
-            }
-        }
-
-        //If the word is negated we need to multiply the score by the negation constant, which is defined in the utility header
-        if (isNegated) {
-            wordScore *= negationConstant;
-        }
-
-
-        //printf("Checking if %s is all caps...\n", testWord);
+        wordScore += (*intensifierScore + 1) * sentimentValue * (*negationScore);
+        *negationScore = 1;
 
         //Check if the word is all caps
         int isAllCaps = 1;
@@ -362,7 +361,6 @@ double sentimentCalculation(char* testWord, double *intensifierScore ) {
 
             //This was from ChatGPT
             if (dummyWord[m] < 65 || dummyWord[m] > 90) {
-                printf("Not all caps\n");
                 isAllCaps = 0;
                 break;
             }
@@ -403,6 +401,22 @@ double sentimentCalculation(char* testWord, double *intensifierScore ) {
         }
     }
 
+    *negationScore = 1;
+
+    //Check if the word is negated
+    int isNegated = 0;
+    for (int l = 0; l < negationCount; l++) {
+        if (strcmp(dummyWord, negations[l]) == 0) {
+            isNegated = 1;
+            break;
+        }
+    }
+
+    //If the word is negated we need to multiply the score by the negation constant, which is defined in the utility header
+    if (isNegated) {
+        *negationScore = -0.5;
+    }
+
     //Return 0 if the word is not in the lexicon
     return 0;
 
@@ -414,12 +428,14 @@ double compoundSentimentScoreCalculation(char** tokens, int sentenceLength) {
     //Variable to store the intensifier score
     double intensifierScore = 0;
 
+    double negationScore = 1;
+
     //Variable to store the total score
     double totalScore = 0;
 
     //Iterate through the tokens and calculate the individual sentiment scores
     for (int i = 0; i < sentenceLength; i++) {
-        double addScore = sentimentCalculation(tokens[i], &intensifierScore);
+        double addScore = sentimentCalculation(tokens[i], &intensifierScore, &negationScore);
         totalScore += addScore;
     }
 
