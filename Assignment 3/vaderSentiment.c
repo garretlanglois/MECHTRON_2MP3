@@ -60,7 +60,7 @@ void parseLexicon(bool verbose) {
 
     rewind(file);
 
-    printf("Lexicon size: %d\n", lexiconSize);
+    //printf("Lexicon size: %d\n", lexiconSize);
 
     //Iterate through the file and parse the data
     for (int i = 0; i < lexiconSize; i++) {
@@ -315,10 +315,13 @@ WordData* findWord(char* word) {
 //This function calculates the sentiment of the word
 double sentimentCalculation(char* testWord, double *intensifierScore, double *negationScore) {
 
+    //printf("Negation score: %f\n", *negationScore);
 
     //Create a dummy word to store the original word, this way when it is lowercased we still have an OG copy to check all caps against
     char dummyWord[100];
     strcpy(dummyWord, testWord);
+
+    //printf("%s\n", dummyWord);
 
     //printf("%f\n", *negationScore);
 
@@ -353,6 +356,9 @@ double sentimentCalculation(char* testWord, double *intensifierScore, double *ne
 
         //Add the sentiment value to the word score, inclusive of any previous intensifiers
         wordScore += (*intensifierScore + 1) * sentimentValue * (*negationScore);
+
+        //printf("Word: %s, Sentiment: %f\n", testWord, wordScore);
+
         *negationScore = 1;
 
         //Check if the word is all caps
@@ -404,9 +410,10 @@ double sentimentCalculation(char* testWord, double *intensifierScore, double *ne
     *negationScore = 1;
 
     //Check if the word is negated
+
     int isNegated = 0;
     for (int l = 0; l < negationCount; l++) {
-        if (strcmp(dummyWord, negations[l]) == 0) {
+        if (strcmp(testWord, negations[l]) == 0) {
             isNegated = 1;
             break;
         }

@@ -13,7 +13,7 @@ int main(void) {
         "VADER is VERY SMART, handsome, and FUNNY!!!",
         "VADER is VERY SMART, uber handsome, and FRIGGIN FUNNY!!!",
         "VADER is not smart, handsome, nor funny.",
-        "At least it isn’t a horrible book.",
+        "At least it isn't a horrible book.",
         "The plot was good, but the characters are uncompelling and the dialog is not great.",
         "Make sure you :) or :D today!",
         "Not bad at all"
