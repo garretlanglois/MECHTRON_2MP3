@@ -17,6 +17,8 @@ int hash(int value) {
     return value % 20;
 }
 
+//New value
+
 void addValue(int value) {
 
     int hashedPosition = hash(value);
