@@ -1,5 +1,9 @@
 // CODE: inlcude library(s)
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "utility.h"
+#include "OF_lib.h"
 
 int main(int argc, char **argv) {
 
