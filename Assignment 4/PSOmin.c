@@ -4,80 +4,146 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
-#include <math.h>  //This file is the minimum lines of code required to implement the PSO
+#include <math.h>
 
 #define INERTIAL_WEIGHT 0.7
 #define COGNITIVE_COEFFICIENT 1.5
 #define SOCIAL_COEFFICIENT 1.5
 
 typedef struct Particle {
-    double *decisionVariables, *personalBest, *velocityVariables;
-    double currentPosition, personalBestFitness;
+    double *decisionVariables;
+    double *personalBest;
+    double currentPosition;
+    double personalBestFitness;
 } Particle;
 
-typedef struct BestPosition {
-    double *decisionVariables, currentValue;
-} BestPosition;
-
-double random_double(double min, double max) { return min + (max - min) * drand48(); }
+// New random function because the old one wouldn't work for me
+// double random_double(double min, double max) {
+//     double random_fraction = drand48();
+//     return min + (max - min) * random_fraction;
+// }
+// New random function using rand() and srand()
+double random_double(double min, double max) {
+    double random_fraction = (double)rand() / RAND_MAX;
+    double return_value = min + (max - min) * random_fraction;
+    //printf("%f, %f, %f\n", return_value,min, max);
+    return return_value;
+}
 
 double pso(ObjectiveFunction objective_function, int NUM_VARIABLES, Bound *bounds, int NUM_PARTICLES, int MAX_ITERATIONS, double *best_position) {
-    Particle *particles[NUM_PARTICLES];
-    BestPosition globalBest = { malloc(NUM_VARIABLES * sizeof(double)), INFINITY };
-    if (!globalBest.decisionVariables) exit(EXIT_FAILURE);
 
+
+    // Allocate memory for particles
+    Particle *particleArray = (Particle *)malloc(NUM_PARTICLES * sizeof(Particle));
+    double *velocityArray = (double *)malloc(NUM_PARTICLES * NUM_VARIABLES * sizeof(double));
+
+    if (!particleArray || !velocityArray) {
+        printf("Error allocating memory...");
+        exit(EXIT_FAILURE);
+    }
+
+    Particle *globalBestParticle = NULL;
+    double globalBestValue = INFINITY;
+
+    // Initialize particles
     for (int i = 0; i < NUM_PARTICLES; i++) {
-        particles[i] = malloc(sizeof(Particle));
-        if (!particles[i]) exit(EXIT_FAILURE);
-        particles[i]->decisionVariables = malloc(NUM_VARIABLES * sizeof(double));
-        particles[i]->personalBest = malloc(NUM_VARIABLES * sizeof(double));
-        particles[i]->velocityVariables = malloc(NUM_VARIABLES * sizeof(double));
+
+        particleArray[i].decisionVariables = (double *)malloc(NUM_VARIABLES * sizeof(double));
+        particleArray[i].personalBest = (double *)malloc(NUM_VARIABLES * sizeof(double));
+
+        if (!particleArray[i].decisionVariables || !particleArray[i].personalBest) {
+            printf("Error allocating memory for particle dimensions...");
+            exit(EXIT_FAILURE);
+        }
 
         for (int j = 0; j < NUM_VARIABLES; j++) {
             double rand_num = random_double(bounds->lowerBound, bounds->upperBound);
-            particles[i]->decisionVariables[j] = particles[i]->personalBest[j] = rand_num;
-            particles[i]->velocityVariables[j] = random_double(-fabs(bounds->upperBound - bounds->lowerBound), fabs(bounds->upperBound - bounds->lowerBound));
+            particleArray[i].decisionVariables[j] = rand_num;
+            particleArray[i].personalBest[j] = rand_num;
+            velocityArray[i * NUM_VARIABLES + j] = random_double(-fabs(bounds->upperBound - bounds->lowerBound), fabs(bounds->upperBound - bounds->lowerBound));
         }
-        double fitness = objective_function(NUM_VARIABLES, particles[i]->decisionVariables);
-        particles[i]->currentPosition = particles[i]->personalBestFitness = fitness;
 
-        if (fitness < globalBest.currentValue) {
-            globalBest.currentValue = fitness;
-            memcpy(globalBest.decisionVariables, particles[i]->decisionVariables, NUM_VARIABLES * sizeof(double));
+        double currentPosition = objective_function(NUM_VARIABLES, particleArray[i].decisionVariables);
+        particleArray[i].currentPosition = currentPosition;
+        particleArray[i].personalBestFitness = currentPosition;
+
+        if (currentPosition < globalBestValue) {
+            globalBestValue = currentPosition;
+            globalBestParticle = &particleArray[i];
         }
     }
 
-    for (int iter = 0; iter < MAX_ITERATIONS; iter++) {
+    int iterationCount = 0;
+
+    // Main optimization loop
+    while (iterationCount < MAX_ITERATIONS) {
         for (int i = 0; i < NUM_PARTICLES; i++) {
+            // Update velocity and position
             for (int j = 0; j < NUM_VARIABLES; j++) {
-                double r1 = random_double(0, 1), r2 = random_double(0, 1);
-                particles[i]->velocityVariables[j] = INERTIAL_WEIGHT * particles[i]->velocityVariables[j] +
-                    COGNITIVE_COEFFICIENT * r1 * (particles[i]->personalBest[j] - particles[i]->decisionVariables[j]) +
-                    SOCIAL_COEFFICIENT * r2 * (globalBest.decisionVariables[j] - particles[i]->decisionVariables[j]);
-                particles[i]->decisionVariables[j] += particles[i]->velocityVariables[j];
-                particles[i]->decisionVariables[j] = fmax(bounds->lowerBound, fmin(bounds->upperBound, particles[i]->decisionVariables[j]));
+                double r1 = random_double(0, 1);
+                double r2 = random_double(0, 1);
+
+                velocityArray[i * NUM_VARIABLES + j] = INERTIAL_WEIGHT * velocityArray[i * NUM_VARIABLES + j] +
+                    COGNITIVE_COEFFICIENT * r1 * (particleArray[i].personalBest[j] - particleArray[i].decisionVariables[j]) +
+                    SOCIAL_COEFFICIENT * r2 * (globalBestParticle->decisionVariables[j] - particleArray[i].decisionVariables[j]);
+
+                // Update position
+                particleArray[i].decisionVariables[j] += velocityArray[i * NUM_VARIABLES + j];
+
+                // Clamp position within bounds
+                particleArray[i].decisionVariables[j] = fmax(bounds->lowerBound, fmin(bounds->upperBound, particleArray[i].decisionVariables[j]));
             }
 
-            double fitness = objective_function(NUM_VARIABLES, particles[i]->decisionVariables);
-            if (fitness < particles[i]->personalBestFitness) {
-                memcpy(particles[i]->personalBest, particles[i]->decisionVariables, NUM_VARIABLES * sizeof(double));
-                particles[i]->personalBestFitness = fitness;
+            double position = objective_function(NUM_VARIABLES, particleArray[i].decisionVariables);
+            particleArray[i].currentPosition = position;
+
+            // Update personal best if current position is better
+            if (position < particleArray[i].personalBestFitness) {
+                memcpy(particleArray[i].personalBest, particleArray[i].decisionVariables, NUM_VARIABLES * sizeof(double));
+                particleArray[i].personalBestFitness = position;
             }
-            if (fitness < globalBest.currentValue) {
-                globalBest.currentValue = fitness;
-                memcpy(globalBest.decisionVariables, particles[i]->decisionVariables, NUM_VARIABLES * sizeof(double));
+
+            // Update global best if current position is better
+            if (position < globalBestValue) {
+                globalBestValue = position;
+                globalBestParticle = &particleArray[i];
             }
         }
-        if (globalBest.currentValue < 1e-8) break;
+
+        // Print the optimal fitness every 50 iterations
+        if (iterationCount % 50 == 0) {
+            printf("Iteration %d: Optimal fitness = %f\n", iterationCount, globalBestValue);
+        }
+
+        // Optional stopping condition
+        if (globalBestValue < 1e-8) {
+            break;
+        }
+
+        iterationCount++;
     }
 
-    memcpy(best_position, globalBest.decisionVariables, NUM_VARIABLES * sizeof(double));
+    // Copy global best position to output parameter
+    memcpy(best_position, globalBestParticle->personalBest, NUM_VARIABLES * sizeof(double));
+
+    // Free allocated memory
     for (int i = 0; i < NUM_PARTICLES; i++) {
-        free(particles[i]->decisionVariables);
-        free(particles[i]->personalBest);
-        free(particles[i]->velocityVariables);
-        free(particles[i]);
+        free(particleArray[i].decisionVariables);
+        free(particleArray[i].personalBest);
     }
-    free(globalBest.decisionVariables);
-    return globalBest.currentValue;
+    free(particleArray);
+    free(velocityArray);
+
+    return globalBestValue;
 }
+
+/*
+int main(void) {
+    // Create a seed for the random number generation
+    srand48(time(NULL));
+
+    // Example usage here
+
+    return 0;
+}
+*/

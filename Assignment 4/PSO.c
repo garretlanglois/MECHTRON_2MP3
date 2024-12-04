@@ -38,6 +38,7 @@ double random_double(double min, double max) {
 
 double pso(ObjectiveFunction objective_function, int NUM_VARIABLES, Bound *bounds, int NUM_PARTICLES, int MAX_ITERATIONS, double *best_position) {
 
+
     Particle* particleArray[NUM_PARTICLES];
 
     for (int i = 0; i < NUM_PARTICLES; i++) {
@@ -73,7 +74,7 @@ double pso(ObjectiveFunction objective_function, int NUM_VARIABLES, Bound *bound
             particleArray[i]->personalBest[j] = random_num;
 
             //Got this line from ChatGPT
-            particleArray[i]->velocityVariables[j] = random_double(-fabs(bounds->upperBound - bounds->lowerBound), fabs(bounds->upperBound - bounds->lowerBound));
+            particleArray[i]->velocityVariables[j] = random_double(-1, 1);
         }
 
         double currentPosition = objective_function(NUM_VARIABLES, particleArray[i]->decisionVariables);
@@ -90,6 +91,8 @@ double pso(ObjectiveFunction objective_function, int NUM_VARIABLES, Bound *bound
 
     while (iterationCount < MAX_ITERATIONS) {
 
+        srand48(time(NULL));
+
         for (int i = 0; i < NUM_PARTICLES; i++) {
             // Update velocity and position
             for (int j = 0; j < NUM_VARIABLES; j++) {
@@ -105,6 +108,11 @@ double pso(ObjectiveFunction objective_function, int NUM_VARIABLES, Bound *bound
 
                 // Clamp position within bounds
                 particleArray[i]->decisionVariables[j] = fmax(bounds->lowerBound, fmin(bounds->upperBound, particleArray[i]->decisionVariables[j]));
+                //Check to see if the position is within bounds
+                if (particleArray[i]->decisionVariables[j] < bounds->lowerBound || particleArray[i]->decisionVariables[j] > bounds->upperBound) {
+                    printf("Error: Particle %d, Dimension %d is out of bounds\n", i, j);
+                    exit(EXIT_FAILURE);
+                }
             }
 
             double position = objective_function(NUM_VARIABLES, particleArray[i]->decisionVariables);
@@ -122,6 +130,11 @@ double pso(ObjectiveFunction objective_function, int NUM_VARIABLES, Bound *bound
                 globalBestPosition.currentValue = position;
                 memcpy(globalBestPosition.decisionVariables, particleArray[i]->decisionVariables, NUM_VARIABLES * sizeof(double));
             }
+        }
+
+        // Print fitness every 100 iterations
+        if (iterationCount % 100 == 0) {
+            printf("Iteration %d: Best Fitness = %f\n", iterationCount, globalBestPosition.currentValue);
         }
 
         // Optional stopping condition

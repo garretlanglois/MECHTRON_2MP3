@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "utility.h"
 #include "OF_lib.h"
 
@@ -67,10 +68,18 @@ int main(int argc, char **argv) {
 
     // best_position is sent to pso and the final global best solution is save into this array
     double *best_position = (double *)malloc(NUM_VARIABLES*sizeof(double));
-    
-    // CODE: measure the CPU time only for the following pso function
+
+    clock_t start, end;
+    double cpu_time_used;
+
+    start = clock();
 
     double best_fitness = pso(objective_function, NUM_VARIABLES, bounds, NUM_PARTICLES, MAX_ITERATIONS, best_position);
+
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+    printf("CPU time used: %lf seconds\n", cpu_time_used);
 
     // Print results
     // best_fitness is the objective function value (fitness) for the final global best solution, this is the lowest fitness achieved

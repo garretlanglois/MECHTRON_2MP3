@@ -11,7 +11,8 @@
     "tuple": "c",
     "type_traits": "c",
     "vector": "c",
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "of_lib.h": "c"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",
