@@ -7,9 +7,11 @@
 #include <string.h>
 #include <math.h>
 
-#define INERTIAL_WEIGHT 0.7
+#define INERTIAL_WEIGHT 0.9 //Modified interial weight to 0.9 to encourage exploration
+#define MIN_INERTIAL_WEIGHT 0.4
 #define COGNITIVE_COEFFICIENT 1.5
 #define SOCIAL_COEFFICIENT 1.5
+#define STAGNANT_ITERATIONS 100
 
 
 typedef struct Particle {
@@ -18,6 +20,7 @@ typedef struct Particle {
     double *velocityVariables;
     double currentPosition;
     double personalBestFitness;
+    int stagnantIterations;
 } Particle;
 
 //This could've been a particle but to save memory, better to have its own type
@@ -99,7 +102,7 @@ double pso(ObjectiveFunction objective_function, int NUM_VARIABLES, Bound *bound
                 double r1 = random_double(0, 1);
                 double r2 = random_double(0, 1);
 
-                particleArray[i]->velocityVariables[j] = INERTIAL_WEIGHT * particleArray[i]->velocityVariables[j] +
+                particleArray[i]->velocityVariables[j] = INERTIAL_WEIGHT* particleArray[i]->velocityVariables[j] +
                     COGNITIVE_COEFFICIENT * r1 * (particleArray[i]->personalBest[j] - particleArray[i]->decisionVariables[j]) +
                     SOCIAL_COEFFICIENT * r2 * (globalBestPosition.decisionVariables[j] - particleArray[i]->decisionVariables[j]);
 
@@ -123,12 +126,23 @@ double pso(ObjectiveFunction objective_function, int NUM_VARIABLES, Bound *bound
             if (position < particleArray[i]->personalBestFitness) {
                 memcpy(particleArray[i]->personalBest, particleArray[i]->decisionVariables, NUM_VARIABLES * sizeof(double));
                 particleArray[i]->personalBestFitness = position;
+                particleArray[i]->stagnantIterations = 0;
+            }
+            else {
+                particleArray[i]->stagnantIterations += 1;
             }
 
             // Update global best if current position is better
             if (position < globalBestPosition.currentValue) {
                 globalBestPosition.currentValue = position;
                 memcpy(globalBestPosition.decisionVariables, particleArray[i]->decisionVariables, NUM_VARIABLES * sizeof(double));
+            }
+
+            if (particleArray[i]->stagnantIterations > STAGNANT_ITERATIONS) {
+                for (int j = 0; j < NUM_VARIABLES; j++) {
+                    particleArray[i]->decisionVariables[j] = random_double(bounds->lowerBound, bounds->upperBound);
+                }
+                particleArray[i]->stagnantIterations = 0;
             }
         }
 
