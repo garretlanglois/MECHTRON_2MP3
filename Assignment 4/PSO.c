@@ -7,8 +7,7 @@
 #include <string.h>
 #include <math.h>
 
-#define INERTIAL_WEIGHT 0.9 //Modified interial weight to 0.9 to encourage exploration
-#define MIN_INERTIAL_WEIGHT 0.4
+#define INERTIAL_WEIGHT 0.7
 #define COGNITIVE_COEFFICIENT 1.5
 #define SOCIAL_COEFFICIENT 1.5
 #define STAGNANT_ITERATIONS 100
@@ -140,7 +139,13 @@ double pso(ObjectiveFunction objective_function, int NUM_VARIABLES, Bound *bound
 
             if (particleArray[i]->stagnantIterations > STAGNANT_ITERATIONS) {
                 for (int j = 0; j < NUM_VARIABLES; j++) {
-                    particleArray[i]->decisionVariables[j] = random_double(bounds->lowerBound, bounds->upperBound);
+                    particleArray[i]->decisionVariables[j] += random_double(-0.8, 0.8);
+
+                    //ensure it is clamped
+                    particleArray[i]->decisionVariables[j] = fmax(bounds->lowerBound, fmin(bounds->upperBound, particleArray[i]->decisionVariables[j]));
+                
+                    //reset the velocity
+                    particleArray[i]->velocityVariables[j] = random_double(-1, 1);
                 }
                 particleArray[i]->stagnantIterations = 0;
             }
@@ -148,11 +153,16 @@ double pso(ObjectiveFunction objective_function, int NUM_VARIABLES, Bound *bound
 
         // Print fitness every 100 iterations
         if (iterationCount % 100 == 0) {
-            printf("Iteration %d: Best Fitness = %f\n", iterationCount, globalBestPosition.currentValue);
+            printf("Iteration %d: Best Fitness = %.30f\n", iterationCount, globalBestPosition.currentValue);
+
+            //print the first two particles current fitness positions for debugging
+
+            printf("Particle 0: %.30f\n", particleArray[0]->currentPosition);
+            printf("Particle 1: %.30f\n", particleArray[1]->currentPosition);
         }
 
         // Optional stopping condition
-        if (globalBestPosition.currentValue < 1e-8) {
+        if ((globalBestPosition.currentValue < 1e-4 && globalBestPosition.currentValue > 0)) {
             break; 
         }
 
