@@ -1,4 +1,4 @@
-// CODE: include library(s)
+//Include all the libraries that we need
 #include "utility.h"
 #include "OF_lib.h"
 #include <stdlib.h>
@@ -7,18 +7,27 @@
 #include <string.h>
 #include <math.h>
 
+//Define all of the constants that we need
 #define INERTIAL_WEIGHT 0.7
 #define COGNITIVE_COEFFICIENT 1.5
 #define SOCIAL_COEFFICIENT 1.5
 #define STAGNANT_ITERATIONS 100
 
 
+//Define the struct for the particle
+//The struct is used to help with readibility of the program and to make designing the logic much easier
 typedef struct Particle {
+    //Array for the dimensions of the particle
     double *decisionVariables;
+    //Array for the personal best position of the particle
     double *personalBest;
+    //Array for the velocity of the particle
     double *velocityVariables;
+    //The current position of the particle
     double currentPosition;
+    //The personal best fitness of the particle
     double personalBestFitness;
+    //The number of stagnant iterations
     int stagnantIterations;
 } Particle;
 
@@ -28,57 +37,73 @@ typedef struct BestPosition {
     double currentValue;
 } BestPosition;
 
-// New random function because the old one wouldn't work for me
+// New random function because the old one wouldn't work for me, this uses drand48
 double random_double(double min, double max) {
+
+    //Create a random fraction from 0 to 1
     double random_fraction = drand48();
+
+    //Return the random number that is generated within the bounds
     return min+ (max-min)*random_fraction;
 
 }
 
-
-// CODE: implement other functions here if necessary
-
+//This is the main function that will be called by the user to run the PSO algorithm
 double pso(ObjectiveFunction objective_function, int NUM_VARIABLES, Bound *bounds, int NUM_PARTICLES, int MAX_ITERATIONS, double *best_position) {
 
-
+    //Create an array of particles
     Particle* particleArray[NUM_PARTICLES];
 
+    //Malloc the memory for the particles
     for (int i = 0; i < NUM_PARTICLES; i++) {
         particleArray[i] = (Particle *)malloc(sizeof(Particle));
+
+        //Check to see if the memory was allocated properly
         if (particleArray[i] == NULL) {
             printf("Error allocating memory for Particles...");
             exit(EXIT_FAILURE);
         }
     }
 
+    //Create a global best position
     BestPosition globalBestPosition;
 
     // Initialize global best position
     globalBestPosition.decisionVariables = (double *)malloc(NUM_VARIABLES * sizeof(double));
+
+    //Check to see if the memory was allocated properly
     if (globalBestPosition.decisionVariables == NULL) {
         printf("Error allocating memory for global best position...");
         exit(EXIT_FAILURE);
     }
 
+    //Set the global best position to infinity, this is needed to ensure that the first particle will always be better
     globalBestPosition.currentValue = INFINITY;
 
-    //Initialize all of the dimensions for the particle
+    //Initialize all of the dimensions for each particle
     for(int i = 0; i < NUM_PARTICLES; i++) {
+
 
         //Malloc everything
         particleArray[i]->decisionVariables = (double *)malloc(NUM_VARIABLES*sizeof(double));
         particleArray[i]->personalBest = (double *)malloc(NUM_VARIABLES*sizeof(double));
         particleArray[i]->velocityVariables = (double *)malloc(NUM_VARIABLES*sizeof(double));
 
+        //Iterate through all of the dimensions and set the values to random numbers
         for(int j=0; j < NUM_VARIABLES; j++) {
             double random_num = random_double(bounds->lowerBound, bounds->upperBound);
+
+            //We want to set the decision variables and the personal best to the same value, that way we can iterate on them
             particleArray[i]->decisionVariables[j] = random_num;
             particleArray[i]->personalBest[j] = random_num;
 
-            //Got this line from ChatGPT
+            //We set the velocity to a random number between -1 and 1
             particleArray[i]->velocityVariables[j] = random_double(-1, 1);
         }
 
+
+        //Calculate the current position of the particle and set it as both the current position and the personal best fitness
+        //We do this because the first iteration will always be the best
         double currentPosition = objective_function(NUM_VARIABLES, particleArray[i]->decisionVariables);
         particleArray[i]->currentPosition = currentPosition;
         particleArray[i]->personalBestFitness = currentPosition;
